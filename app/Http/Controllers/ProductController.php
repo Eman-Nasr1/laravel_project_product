@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;  
 use Illuminate\Http\Request;
-
+use App\Models\Product;
 class ProductController extends Controller
 {
     //
     public function index(){
-        $products=DB::table('product')->get();
+        $products=Product::get();
         return view('createproduct ', ['products' => $products]); 
 
     }
@@ -21,7 +21,34 @@ class ProductController extends Controller
     }
 
 
-    public function store(Request $request)  
+//     public function store(Request $request)  
+// {  
+//     try {  
+//         $validatedData = $request->validate([  
+//             'title' => 'required|string|max:255|regex:/^[A-Za-z\s]+$/',  
+//             'description' => 'required|string|max:255|regex:/^[A-Za-z\s]+$/',  
+//             'amount' => 'required|numeric',  
+//             'price' => 'required|numeric',  
+//             'image' => 'required|image|mimes:png,jpg,jpeg|max:2048', 
+//         ]);  
+ 
+//         if ($request->hasFile('image')) {  
+//             $image = $request->file('image');
+//             $imageName = time() . '_' . $image->getClientOriginalName(); // Generate unique image name
+//             $image->move(public_path('images'), $imageName); // Move the file to public/images
+//             $validatedData['image'] = $imageName;
+//         }  
+    
+//         DB::table('product')->insert($validatedData);  
+//         return redirect()->route('products.create')->with('message', 'Product created successfully.'); 
+
+//     } catch (\Exception $e) {  
+//         dd($e->getMessage());  
+//     }  
+// }
+
+
+public function store(Request $request)  
 {  
     try {  
         $validatedData = $request->validate([  
@@ -39,7 +66,7 @@ class ProductController extends Controller
             $validatedData['image'] = $imageName;
         }  
     
-        DB::table('product')->insert($validatedData);  
+       Product::create($validatedData);  
         return redirect()->route('products.create')->with('message', 'Product created successfully.'); 
 
     } catch (\Exception $e) {  
@@ -47,20 +74,27 @@ class ProductController extends Controller
     }  
 }
 
-public function edit($id)
+
+// public function edit($id)
+// {
+//     $product = DB::table('product')->find($id);
+
+//     if (!$product) {
+//         return redirect()->route('products.index')->with('error', 'Product not found.');
+//     }
+
+//     return view('editproduct', compact('product'));
+// }
+
+public function edit(Product $product)
 {
-    $product = DB::table('product')->find($id);
-
-    if (!$product) {
-        return redirect()->route('products.index')->with('error', 'Product not found.');
-    }
-
+   
     return view('editproduct', compact('product'));
 }
 
   
 
-public function update(Request $request, $id)
+public function update(Request $request, Product $product)
 {
     try {
         $validatedData = $request->validate([
@@ -71,11 +105,6 @@ public function update(Request $request, $id)
             'image' => 'nullable|image|mimes:png,jpg,jpeg|max:2048', 
         ]);
 
-        $product = DB::table('product')->find($id);
-
-        if (!$product) {
-            return redirect()->route('products.index')->with('error', 'Product not found.');
-        }
 
         if ($request->hasFile('image')) {
             $image = $request->file('image');
@@ -87,7 +116,7 @@ public function update(Request $request, $id)
             $validatedData['image'] = $product->image;
         }
 
-        DB::table('product')->where('id', $id)->update($validatedData);
+        $product->update($validatedData);
 
         return redirect()->route('products.index')->with('message', 'Product updated successfully.');
 
@@ -97,17 +126,12 @@ public function update(Request $request, $id)
 }
 
 
-public function delete($id)
+public function delete( Product $product)
 {
     try {
    
-        $product = DB::table('product')->find($id);
 
-        if (!$product) {
-            return redirect()->route('products.index')->with('error', 'Product not found.');
-        }
-
-        DB::table('product')->where('id', $id)->delete();
+        $product->delete();
 
         return redirect()->route('products.index')->with('message', 'Product deleted successfully.');
     } catch (\Exception $e) {
